@@ -129,7 +129,5 @@ pcall(function() require('which-key').add { { '<leader>b', group = '[B]uffer' } 
 vim.api.nvim_create_autocmd('FileType', {
   group = vim.api.nvim_create_augroup('explorer-claude', { clear = true }),
   pattern = { 'neo-tree', 'oil' },
-  callback = function(ev)
-    vim.keymap.set('n', '<leader>as', '<cmd>ClaudeCodeTreeAdd<cr>', { buffer = ev.buf, desc = '[A]gent: [s]end file' })
-  end,
+  callback = function(ev) vim.keymap.set('n', '<leader>as', '<cmd>ClaudeCodeTreeAdd<cr>', { buffer = ev.buf, desc = '[A]gent: [s]end file' }) end,
 })
