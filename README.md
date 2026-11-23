@@ -18,9 +18,20 @@ Language servers, formatters and linters are installed automatically by **Mason*
 
 ## Install on a new machine
 
+macOS / Linux:
+
 ```sh
+# Back up an existing config first, if you have one.
+mv ~/.config/nvim ~/.config/nvim.bak 2>/dev/null
+
 git clone https://github.com/nisigit/nvim-config.git ~/.config/nvim
 nvim
+```
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/nisigit/nvim-config.git "$env:LOCALAPPDATA\nvim"
 ```
 
 On first start Neovim installs the pinned plugins from `nvim-pack-lock.json`
@@ -56,6 +67,22 @@ Leader is `<Space>`.
 | `<leader>th` | toggle inlay hints |
 
 Press `<Space>` and wait for which-key to list everything.
+
+## Syncing between machines
+
+This repository is the source of truth. Pull before you start editing on a
+machine, and push when you are done:
+
+```sh
+git -C ~/.config/nvim pull --rebase
+# ...edit config...
+git -C ~/.config/nvim add -A
+git -C ~/.config/nvim commit -m "describe the change"
+git -C ~/.config/nvim push
+```
+
+Commit `nvim-pack-lock.json` whenever a plugin update changes it, so every
+machine runs the same plugin revisions.
 
 ## Updating
 
