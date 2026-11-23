@@ -110,7 +110,7 @@ do
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -728,22 +728,95 @@ do
     end,
   })
 
+  -- JSON schema support for package.json, tsconfig.json, .eslintrc, ...
+  -- Without this `jsonls` only knows about the file in front of you.
+  vim.pack.add({ gh 'b0o/SchemaStore.nvim' }, { confirm = false })
+  local ok_schema, schemastore = pcall(require, 'schemastore')
+  local json_schemas = ok_schema and schemastore.json.schemas() or {}
+
   -- Enable the following language servers
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
   ---@type table<string, vim.lsp.Config>
   local servers = {
-    -- clangd = {},
-    -- gopls = {},
-    -- pyright = {},
-    -- tsc = {},
-    --
-    -- Some languages (like rust) have entire language plugins that can be useful:
-    --    https://github.com/mrcjkb/rustaceanvim
-    --
-    -- But for many setups, the LSP (`rust_analyzer`) will work just fine
-    -- rust_analyzer = {},
+    -- [[ Go ]]
+    -- `gopls` shells out to `go`, which is on PATH at /usr/local/go/bin/go.
+    gopls = {
+      settings = {
+        gopls = {
+          staticcheck = true,
+          usePlaceholders = true,
+          analyses = { unusedparams = true, shadow = true, nilness = true },
+          -- Inlay hints are off until you press <leader>th.
+          hints = {
+            assignVariableTypes = true,
+            compositeLiteralFields = true,
+            compositeLiteralTypes = true,
+            constantValues = true,
+            functionTypeParameters = true,
+            parameterNames = true,
+            rangeVariableTypes = true,
+          },
+        },
+      },
+    },
 
+    -- [[ Python ]]
+    pyright = {
+      settings = {
+        python = {
+          analysis = {
+            typeCheckingMode = 'standard', -- 'off' | 'basic' | 'standard' | 'strict'
+            autoSearchPaths = true,
+            useLibraryCodeForTypes = true,
+            diagnosticMode = 'openFilesOnly',
+          },
+        },
+      },
+    },
+    -- Lint + import sorting. Picks up pyproject.toml / ruff.toml from the project.
+    ruff = {},
+
+    -- [[ TypeScript / JavaScript: Next.js, React, Node ]]
+    ts_ls = {
+      settings = {
+        typescript = {
+          inlayHints = {
+            includeInlayParameterNameHints = 'literals',
+            includeInlayVariableTypeHints = true,
+            includeInlayFunctionParameterTypeHints = true,
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayEnumMemberValueHints = true,
+          },
+          preferences = {
+            includePackageJsonAutoImports = 'auto',
+            -- Prefer `@/foo` / `~/foo` / package names over `../../foo`
+            importModuleSpecifier = 'shortest',
+          },
+        },
+        javascript = {
+          inlayHints = { includeInlayParameterNameHints = 'literals' },
+          preferences = { includePackageJsonAutoImports = 'auto' },
+        },
+      },
+    },
+    -- Needs an eslint config in the project; stays quiet otherwise.
+    eslint = {},
+    -- JSON / JSONC: tsconfig.json, package.json, .eslintrc, ...
+    jsonls = {
+      settings = {
+        json = {
+          schemas = json_schemas,
+          validate = { enable = true },
+        },
+      },
+    },
+    cssls = {},
+    -- Emmet abbreviations inside JSX/TSX/HTML/CSS.
+    emmet_language_server = {},
+    -- tailwindcss = {}, -- uncomment if you use Tailwind
+
+    -- [[ Lua ]]
     stylua = {}, -- Used to format Lua code
 
     -- Special Lua Config, as recommended by neovim help docs
@@ -801,9 +874,13 @@ do
   --    :Mason
   --
   -- You can press `g?` for help in this menu.
+  -- Formatters/linters that are not language servers. The LSP names above are
+  -- translated to Mason package names by mason-tool-installer.
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
-    -- You can add other tools here that you want Mason to install
+    'gofumpt', -- stricter gofmt (conform)
+    'goimports', -- adds/removes Go imports (conform)
+    'prettier', -- JS/TS/JSON/CSS/HTML (conform)
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -841,11 +918,18 @@ do
     -- You can also specify external formatters in here.
     formatters_by_ft = {
       -- rust = { 'rustfmt' },
-      -- Conform can also run multiple formatters sequentially
-      -- python = { "isort", "black" },
-      --
-      -- You can use 'stop_after_first' to run the first available formatter from the list
-      -- javascript = { "prettierd", "prettier", stop_after_first = true },
+      go = { 'gofumpt', 'goimports' },
+      -- conform runs lists in order, so imports are sorted before formatting
+      python = { 'ruff_organize_imports', 'ruff_format' },
+      javascript = { 'prettier' },
+      javascriptreact = { 'prettier' },
+      typescript = { 'prettier' },
+      typescriptreact = { 'prettier' },
+      json = { 'prettier' },
+      jsonc = { 'prettier' },
+      css = { 'prettier' },
+      scss = { 'prettier' },
+      html = { 'prettier' },
     },
   }
 
