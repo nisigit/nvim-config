@@ -21,6 +21,22 @@ vim.pack.add({
   gh 'stevearc/oil.nvim',
 }, { confirm = false })
 
+-- [[ Project root ]]
+-- neo-tree roots at the cwd, and `nvim ~/some_repo` keeps the shell's cwd.
+-- Move into the directory given on the command line, or into the git repo of
+-- the file given, so the tree shows the project you opened.
+vim.api.nvim_create_autocmd('VimEnter', {
+  group = vim.api.nvim_create_augroup('explorer-project-root', { clear = true }),
+  callback = function()
+    -- oil has already renamed a directory argument to oil:///path/ by now.
+    local arg = vim.fn.argv(0):gsub('^oil://', '')
+    if arg == '' then return end
+    local path = vim.fn.fnamemodify(arg, ':p')
+    local dir = vim.fn.isdirectory(path) == 1 and path or vim.fs.root(path, '.git')
+    if dir then vim.cmd.cd(vim.fn.fnameescape(dir)) end
+  end,
+})
+
 -- [[ Project tree ]]
 local function node_path(state) return state.tree:get_node():get_id() end
 
