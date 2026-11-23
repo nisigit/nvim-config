@@ -765,6 +765,10 @@ do
     pyright = {
       settings = {
         python = {
+          -- Plain `pyright` (unlike Pylance) does not auto-detect `.venv` and
+          -- ignores `venvPath`/`venv` from LSP settings, so point it at the
+          -- project-local interpreter instead (uv/poetry use `.venv`).
+          pythonPath = '.venv/bin/python',
           analysis = {
             typeCheckingMode = 'standard', -- 'off' | 'basic' | 'standard' | 'strict'
             autoSearchPaths = true,
